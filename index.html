@@ -40,88 +40,13 @@
         p {
             font-size: 18px;
             color: #666;
-            margin-bottom: 40px;
-        }
-
-        /* Countdown container */
-        .countdown {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 30px;
-        }
-
-        /* Countdown numbers */
-        .countdown div {
-            font-size: 36px;
-            color: #333;
-        }
-
-        .countdown div span {
-            display: block;
-            font-size: 14px;
-            color: #666;
-        }
-
-        /* Email notification form */
-        form {
-            display: flex;
-            justify-content: center;
             margin-bottom: 20px;
-        }
-
-        input[type="email"] {
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 4px 0 0 4px;
-            outline: none;
-            width: 70%;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            color: #fff;
-            background-color: #007bff;
-            border: none;
-            border-radius: 0 4px 4px 0;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        /* Footer with social icons */
-        .social-icons {
-            display: flex;
-            justify-content: center;
-            margin-top: 30px;
-        }
-
-        .social-icons a {
-            margin: 0 10px;
-            color: #333;
-            font-size: 24px;
-            text-decoration: none;
-        }
-
-        .social-icons a:hover {
-            color: #007bff;
         }
 
         /* Responsive design */
         @media (max-width: 768px) {
             h1 {
                 font-size: 36px;
-            }
-
-            .countdown div {
-                font-size: 24px;
-            }
-
-            input[type="email"] {
-                width: 60%;
             }
         }
     </style>
@@ -131,70 +56,7 @@
     <div class="coming-soon-container">
         <h1>Coming Soon</h1>
         <p>We're working hard to launch our new website. Stay tuned!</p>
-
-        <div class="countdown" id="countdown">
-            <div>
-                <span id="days">00</span>
-                <span>Days</span>
-            </div>
-            <div>
-                <span id="hours">00</span>
-                <span>Hours</span>
-            </div>
-            <div>
-                <span id="minutes">00</span>
-                <span>Minutes</span>
-            </div>
-            <div>
-                <span id="seconds">00</span>
-                <span>Seconds</span>
-            </div>
-        </div>
-
-        <form id="notifyForm">
-            <input type="email" placeholder="Enter your email" required>
-            <button type="submit">Notify Me</button>
-        </form>
-
-        <div class="social-icons">
-            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i> F</a>
-            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i> T</a>
-            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i> I</a>
-        </div>
     </div>
 
-    <script>
-        // Countdown logic
-        const countdownElement = document.getElementById('countdown');
-        const targetDate = new Date('2024-12-31T00:00:00').getTime();
-
-        function updateCountdown() {
-            const now = new Date().getTime();
-            const distance = targetDate - now;
-
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            document.getElementById('days').innerText = days < 10 ? '0' + days : days;
-            document.getElementById('hours').innerText = hours < 10 ? '0' + hours : hours;
-            document.getElementById('minutes').innerText = minutes < 10 ? '0' + minutes : minutes;
-            document.getElementById('seconds').innerText = seconds < 10 ? '0' + seconds : seconds;
-
-            if (distance < 0) {
-                clearInterval(countdownInterval);
-                countdownElement.innerHTML = "<p>Our site is now live!</p>";
-            }
-        }
-
-        const countdownInterval = setInterval(updateCountdown, 1000);
-
-        // Email notification form logic (dummy action)
-        document.getElementById('notifyForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            alert('Thank you! We will notify you when we launch.');
-        });
-    </script>
 </body>
 </html>
