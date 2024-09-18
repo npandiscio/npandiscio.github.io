@@ -2,148 +2,342 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Snake Game</title>
+    <title>Glassmorphic Web App Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Fonts for Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* Global Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+        }
+
         body {
-            text-align: center;
-            font-family: Arial, sans-serif;
+            height: 100vh;
+            width: 100vw;
+            background: url('https://images.unsplash.com/photo-1522199755839-a2bacb67c546?&auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
         }
-        #gameCanvas {
-            border: 1px solid #000;
-            background-color: #eee;
+
+        /* Glassmorphic Button */
+        #launchBtn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
         }
-        #score {
-            font-size: 20px;
-            margin-top: 10px;
+
+        #launchBtn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
         }
-        h1 {
-            margin-top: 50px;
+
+        /* Window Container */
+        #windowContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
         }
-        p {
-            font-size: 18px;
+
+        /* Individual Window Styles */
+        .window {
+            position: absolute;
+            width: 400px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            pointer-events: all;
+            transition: all 0.3s;
         }
+
+        .window.minimized {
+            height: 40px;
+        }
+
+        /* Title Bar */
+        .title-bar {
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            cursor: move;
+        }
+
+        .title {
+            font-weight: 500;
+            color: #fff;
+        }
+
+        /* Window Controls */
+        .window-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .window-controls button {
+            width: 20px;
+            height: 20px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .window-controls button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .maximize-btn {
+            background: #4caf50;
+        }
+
+        .minimize-btn {
+            background: #ffeb3b;
+        }
+
+        .close-btn {
+            background: #f44336;
+        }
+
+        /* Text Editor */
+        .editor {
+            flex: 1;
+            padding: 10px;
+        }
+
+        .editor textarea {
+            width: 100%;
+            height: 100%;
+            resize: none;
+            border: none;
+            background: transparent;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        /* Resize Handle */
+        .resize-handle {
+            width: 15px;
+            height: 15px;
+            background: transparent;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            cursor: se-resize;
+        }
+
     </style>
 </head>
 <body>
-    <h1>Snake Game</h1>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <div id="score">Score: 0</div>
-    <p>Use the arrow keys to control the snake.</p>
+    <button id="launchBtn">Launch Window</button>
+    <div id="windowContainer"></div>
 
     <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
+        let windowCount = 0;
+        const windowContainer = document.getElementById('windowContainer');
+        const launchBtn = document.getElementById('launchBtn');
 
-        const gridSize = 20;
-        const tileCount = canvas.width / gridSize;
+        launchBtn.addEventListener('click', () => {
+            createWindow();
+        });
 
-        let snake = [];
-        snake[0] = { x: 10, y: 10 };
+        function createWindow() {
+            windowCount++;
+            const win = document.createElement('div');
+            win.classList.add('window');
+            win.style.top = `${50 + windowCount * 20}px`;
+            win.style.left = `${50 + windowCount * 20}px`;
+            win.style.zIndex = windowCount;
 
-        let food = {
-            x: Math.floor(Math.random() * tileCount),
-            y: Math.floor(Math.random() * tileCount)
-        };
+            // Title Bar
+            const titleBar = document.createElement('div');
+            titleBar.classList.add('title-bar');
 
-        let vx = 1;
-        let vy = 0;
+            const title = document.createElement('div');
+            title.classList.add('title');
+            title.textContent = `Window ${windowCount}`;
 
-        let score = 0;
+            const controls = document.createElement('div');
+            controls.classList.add('window-controls');
 
-        document.addEventListener("keydown", keyDown);
+            const maximizeBtn = document.createElement('button');
+            maximizeBtn.classList.add('maximize-btn');
+            maximizeBtn.title = 'Maximize';
 
-        function keyDown(event) {
-            if (event.keyCode == 37 && vx != 1) { // Left arrow
-                vx = -1;
-                vy = 0;
-            }
-            if (event.keyCode == 38 && vy != 1) { // Up arrow
-                vx = 0;
-                vy = -1;
-            }
-            if (event.keyCode == 39 && vx != -1) { // Right arrow
-                vx = 1;
-                vy = 0;
-            }
-            if (event.keyCode == 40 && vy != -1) { // Down arrow
-                vx = 0;
-                vy = 1;
-            }
-        }
+            const minimizeBtn = document.createElement('button');
+            minimizeBtn.classList.add('minimize-btn');
+            minimizeBtn.title = 'Minimize';
 
-        function game() {
-            let headX = snake[0].x + vx;
-            let headY = snake[0].y + vy;
+            const closeBtn = document.createElement('button');
+            closeBtn.classList.add('close-btn');
+            closeBtn.title = 'Close';
 
-            // Wrap around the edges
-            if (headX < 0) {
-                headX = tileCount - 1;
-            }
-            if (headX >= tileCount) {
-                headX = 0;
-            }
-            if (headY < 0) {
-                headY = tileCount - 1;
-            }
-            if (headY >= tileCount) {
-                headY = 0;
-            }
+            controls.appendChild(minimizeBtn);
+            controls.appendChild(maximizeBtn);
+            controls.appendChild(closeBtn);
 
-            // Check for collision with self
-            for (let i = 0; i < snake.length; i++) {
-                if (snake[i].x == headX && snake[i].y == headY) {
-                    // Game over
-                    alert("Game Over! Your score was: " + score);
-                    document.location.reload();
-                    clearInterval(interval);
-                    return;
+            titleBar.appendChild(title);
+            titleBar.appendChild(controls);
+            win.appendChild(titleBar);
+
+            // Editor
+            const editor = document.createElement('div');
+            editor.classList.add('editor');
+            const textarea = document.createElement('textarea');
+            textarea.placeholder = 'Start typing...';
+            editor.appendChild(textarea);
+            win.appendChild(editor);
+
+            // Resize Handle
+            const resizeHandle = document.createElement('div');
+            resizeHandle.classList.add('resize-handle');
+            win.appendChild(resizeHandle);
+
+            windowContainer.appendChild(win);
+
+            // Dragging Functionality
+            makeDraggable(win, titleBar);
+
+            // Resizing Functionality
+            makeResizable(win, resizeHandle);
+
+            // Window Controls Functionality
+            closeBtn.addEventListener('click', () => {
+                windowContainer.removeChild(win);
+            });
+
+            minimizeBtn.addEventListener('click', () => {
+                win.classList.toggle('minimized');
+            });
+
+            maximizeBtn.addEventListener('click', () => {
+                if (!win.classList.contains('maximized')) {
+                    win.dataset.prevWidth = win.style.width;
+                    win.dataset.prevHeight = win.style.height;
+                    win.dataset.prevTop = win.style.top;
+                    win.dataset.prevLeft = win.style.left;
+                    win.style.top = '0';
+                    win.style.left = '0';
+                    win.style.width = '100%';
+                    win.style.height = '100%';
+                    win.classList.add('maximized');
+                } else {
+                    win.style.width = win.dataset.prevWidth;
+                    win.style.height = win.dataset.prevHeight;
+                    win.style.top = win.dataset.prevTop;
+                    win.style.left = win.dataset.prevLeft;
+                    win.classList.remove('maximized');
                 }
-            }
+            });
 
-            snake.unshift({ x: headX, y: headY });
-
-            // Check for food
-            if (headX == food.x && headY == food.y) {
-                score++;
-                document.getElementById("score").innerHTML = "Score: " + score;
-                food = {
-                    x: Math.floor(Math.random() * tileCount),
-                    y: Math.floor(Math.random() * tileCount)
-                };
-            } else {
-                snake.pop();
-            }
-
-            drawGame();
+            // Bring window to front on click
+            win.addEventListener('mousedown', () => {
+                windowCount++;
+                win.style.zIndex = windowCount;
+            });
         }
 
-        function drawGame() {
-            // Clear the canvas
-            ctx.fillStyle = "#eee";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        function makeDraggable(element, handle) {
+            let isDragging = false;
+            let offsetX, offsetY;
 
-            // Draw the snake
-            ctx.fillStyle = "green";
-            for (let i = 0; i < snake.length; i++) {
-                ctx.fillRect(
-                    snake[i].x * gridSize,
-                    snake[i].y * gridSize,
-                    gridSize - 2,
-                    gridSize - 2
-                );
+            handle.addEventListener('mousedown', (e) => {
+                if (element.classList.contains('maximized')) return;
+                isDragging = true;
+                const rect = element.getBoundingClientRect();
+                offsetX = e.clientX - rect.left;
+                offsetY = e.clientY - rect.top;
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            function onMouseMove(e) {
+                if (!isDragging) return;
+                let x = e.clientX - offsetX;
+                let y = e.clientY - offsetY;
+
+                // Prevent window from going out of viewport
+                x = Math.max(0, Math.min(x, window.innerWidth - element.offsetWidth));
+                y = Math.max(0, Math.min(y, window.innerHeight - element.offsetHeight));
+
+                element.style.left = x + 'px';
+                element.style.top = y + 'px';
             }
 
-            // Draw the food
-            ctx.fillStyle = "red";
-            ctx.fillRect(
-                food.x * gridSize,
-                food.y * gridSize,
-                gridSize - 2,
-                gridSize - 2
-            );
+            function onMouseUp() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
         }
 
-        let interval = setInterval(game, 100);
+        function makeResizable(element, handle) {
+            let isResizing = false;
+            let startX, startY, startWidth, startHeight;
+
+            handle.addEventListener('mousedown', (e) => {
+                if (element.classList.contains('maximized')) return;
+                isResizing = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                startWidth = parseInt(document.defaultView.getComputedStyle(element).width, 10);
+                startHeight = parseInt(document.defaultView.getComputedStyle(element).height, 10);
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+                e.preventDefault();
+            });
+
+            function onMouseMove(e) {
+                if (!isResizing) return;
+                let newWidth = startWidth + e.clientX - startX;
+                let newHeight = startHeight + e.clientY - startY;
+
+                // Set minimum size
+                newWidth = Math.max(300, newWidth);
+                newHeight = Math.max(200, newHeight);
+
+                // Prevent window from exceeding viewport
+                newWidth = Math.min(newWidth, window.innerWidth - element.offsetLeft);
+                newHeight = Math.min(newHeight, window.innerHeight - element.offsetTop);
+
+                element.style.width = newWidth + 'px';
+                element.style.height = newHeight + 'px';
+            }
+
+            function onMouseUp() {
+                isResizing = false;
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+        }
+
     </script>
 </body>
 </html>
