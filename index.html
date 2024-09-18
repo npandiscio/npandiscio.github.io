@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Glassmorphic Web App Demo</title>
+    <title>Simple Spreadsheet App with Dynamic Graph</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Google Fonts for Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Global Styles */
         * {
@@ -18,325 +20,218 @@
         body {
             height: 100vh;
             width: 100vw;
-            background: url('https://images.unsplash.com/photo-1522199755839-a2bacb67c546?&auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
-            background-size: cover;
+            background-color: #f0f2f5;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
+        }
+
+        /* Container Layout */
+        .container {
+            display: flex;
+            flex-direction: row;
+            width: 90%;
+            height: 80%;
+            background-color: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 10px;
             overflow: hidden;
         }
 
-        /* Glassmorphic Button */
-        #launchBtn {
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            color: #fff;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            cursor: pointer;
-            transition: background 0.3s, transform 0.3s;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        /* Spreadsheet Section */
+        .spreadsheet {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
         }
 
-        #launchBtn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
+        .spreadsheet h2 {
+            margin-bottom: 20px;
+            color: #333;
         }
 
-        /* Window Container */
-        #windowContainer {
-            position: absolute;
-            top: 0;
-            left: 0;
+        table {
             width: 100%;
-            height: 100%;
-            pointer-events: none;
+            border-collapse: collapse;
         }
 
-        /* Individual Window Styles */
-        .window {
-            position: absolute;
-            width: 400px;
-            height: 300px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            backdrop-filter: blur(15px);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f7f7f7;
+            color: #555;
+        }
+
+        td input {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            background-color: transparent;
+            font-size: 1rem;
+        }
+
+        td input:focus {
+            outline: none;
+            background-color: #eef;
+        }
+
+        /* Graph Section */
+        .graph {
+            flex: 1;
+            padding: 20px;
+            background-color: #fafafa;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            pointer-events: all;
-            transition: all 0.3s;
-        }
-
-        .window.minimized {
-            height: 40px;
-        }
-
-        /* Title Bar */
-        .title-bar {
-            height: 40px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 10px;
-            cursor: move;
+            justify-content: center;
         }
 
-        .title {
-            font-weight: 500;
-            color: #fff;
+        .graph h2 {
+            margin-bottom: 20px;
+            color: #333;
         }
 
-        /* Window Controls */
-        .window-controls {
-            display: flex;
-            gap: 10px;
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
         }
 
-        .window-controls button {
-            width: 20px;
-            height: 20px;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: 90%;
+                width: 95%;
+            }
 
-        .window-controls button:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
+            .graph {
+                height: 50%;
+            }
 
-        .maximize-btn {
-            background: #4caf50;
+            .spreadsheet {
+                height: 50%;
+            }
         }
-
-        .minimize-btn {
-            background: #ffeb3b;
-        }
-
-        .close-btn {
-            background: #f44336;
-        }
-
-        /* Text Editor */
-        .editor {
-            flex: 1;
-            padding: 10px;
-        }
-
-        .editor textarea {
-            width: 100%;
-            height: 100%;
-            resize: none;
-            border: none;
-            background: transparent;
-            color: #fff;
-            font-size: 1rem;
-            outline: none;
-            font-family: 'Roboto', sans-serif;
-        }
-
-        /* Resize Handle */
-        .resize-handle {
-            width: 15px;
-            height: 15px;
-            background: transparent;
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            cursor: se-resize;
-        }
-
     </style>
 </head>
 <body>
-    <button id="launchBtn">Launch Window</button>
-    <div id="windowContainer"></div>
+    <div class="container">
+        <!-- Spreadsheet Section -->
+        <div class="spreadsheet">
+            <h2>Spreadsheet</h2>
+            <table id="data-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" placeholder="Enter category" value="Category 1"></td>
+                        <td><input type="number" placeholder="Enter value" value="10"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Enter category" value="Category 2"></td>
+                        <td><input type="number" placeholder="Enter value" value="20"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Enter category" value="Category 3"></td>
+                        <td><input type="number" placeholder="Enter value" value="30"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Enter category" value="Category 4"></td>
+                        <td><input type="number" placeholder="Enter value" value="40"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Enter category" value="Category 5"></td>
+                        <td><input type="number" placeholder="Enter value" value="50"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Graph Section -->
+        <div class="graph">
+            <h2>Dynamic Graph</h2>
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
 
     <script>
-        let windowCount = 0;
-        const windowContainer = document.getElementById('windowContainer');
-        const launchBtn = document.getElementById('launchBtn');
+        // Get references to the table and chart canvas
+        const table = document.getElementById('data-table');
+        const ctx = document.getElementById('myChart').getContext('2d');
 
-        launchBtn.addEventListener('click', () => {
-            createWindow();
+        // Function to extract data from the table
+        function getTableData() {
+            const labels = [];
+            const data = [];
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const category = row.cells[0].querySelector('input').value;
+                const value = parseFloat(row.cells[1].querySelector('input').value) || 0;
+                labels.push(category);
+                data.push(value);
+            });
+            return { labels, data };
+        }
+
+        // Initialize Chart.js bar chart
+        let chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Values',
+                    data: [],
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision:0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
         });
 
-        function createWindow() {
-            windowCount++;
-            const win = document.createElement('div');
-            win.classList.add('window');
-            win.style.top = `${50 + windowCount * 20}px`;
-            win.style.left = `${50 + windowCount * 20}px`;
-            win.style.zIndex = windowCount;
-
-            // Title Bar
-            const titleBar = document.createElement('div');
-            titleBar.classList.add('title-bar');
-
-            const title = document.createElement('div');
-            title.classList.add('title');
-            title.textContent = `Window ${windowCount}`;
-
-            const controls = document.createElement('div');
-            controls.classList.add('window-controls');
-
-            const maximizeBtn = document.createElement('button');
-            maximizeBtn.classList.add('maximize-btn');
-            maximizeBtn.title = 'Maximize';
-
-            const minimizeBtn = document.createElement('button');
-            minimizeBtn.classList.add('minimize-btn');
-            minimizeBtn.title = 'Minimize';
-
-            const closeBtn = document.createElement('button');
-            closeBtn.classList.add('close-btn');
-            closeBtn.title = 'Close';
-
-            controls.appendChild(minimizeBtn);
-            controls.appendChild(maximizeBtn);
-            controls.appendChild(closeBtn);
-
-            titleBar.appendChild(title);
-            titleBar.appendChild(controls);
-            win.appendChild(titleBar);
-
-            // Editor
-            const editor = document.createElement('div');
-            editor.classList.add('editor');
-            const textarea = document.createElement('textarea');
-            textarea.placeholder = 'Start typing...';
-            editor.appendChild(textarea);
-            win.appendChild(editor);
-
-            // Resize Handle
-            const resizeHandle = document.createElement('div');
-            resizeHandle.classList.add('resize-handle');
-            win.appendChild(resizeHandle);
-
-            windowContainer.appendChild(win);
-
-            // Dragging Functionality
-            makeDraggable(win, titleBar);
-
-            // Resizing Functionality
-            makeResizable(win, resizeHandle);
-
-            // Window Controls Functionality
-            closeBtn.addEventListener('click', () => {
-                windowContainer.removeChild(win);
-            });
-
-            minimizeBtn.addEventListener('click', () => {
-                win.classList.toggle('minimized');
-            });
-
-            maximizeBtn.addEventListener('click', () => {
-                if (!win.classList.contains('maximized')) {
-                    win.dataset.prevWidth = win.style.width;
-                    win.dataset.prevHeight = win.style.height;
-                    win.dataset.prevTop = win.style.top;
-                    win.dataset.prevLeft = win.style.left;
-                    win.style.top = '0';
-                    win.style.left = '0';
-                    win.style.width = '100%';
-                    win.style.height = '100%';
-                    win.classList.add('maximized');
-                } else {
-                    win.style.width = win.dataset.prevWidth;
-                    win.style.height = win.dataset.prevHeight;
-                    win.style.top = win.dataset.prevTop;
-                    win.style.left = win.dataset.prevLeft;
-                    win.classList.remove('maximized');
-                }
-            });
-
-            // Bring window to front on click
-            win.addEventListener('mousedown', () => {
-                windowCount++;
-                win.style.zIndex = windowCount;
-            });
+        // Function to update the chart with new data
+        function updateChart() {
+            const { labels, data } = getTableData();
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = data;
+            chart.update();
         }
 
-        function makeDraggable(element, handle) {
-            let isDragging = false;
-            let offsetX, offsetY;
+        // Initial chart update
+        updateChart();
 
-            handle.addEventListener('mousedown', (e) => {
-                if (element.classList.contains('maximized')) return;
-                isDragging = true;
-                const rect = element.getBoundingClientRect();
-                offsetX = e.clientX - rect.left;
-                offsetY = e.clientY - rect.top;
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);
-            });
+        // Add event listeners to all input fields for real-time updates
+        const inputs = table.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('input', updateChart);
+        });
 
-            function onMouseMove(e) {
-                if (!isDragging) return;
-                let x = e.clientX - offsetX;
-                let y = e.clientY - offsetY;
-
-                // Prevent window from going out of viewport
-                x = Math.max(0, Math.min(x, window.innerWidth - element.offsetWidth));
-                y = Math.max(0, Math.min(y, window.innerHeight - element.offsetHeight));
-
-                element.style.left = x + 'px';
-                element.style.top = y + 'px';
-            }
-
-            function onMouseUp() {
-                isDragging = false;
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', onMouseUp);
-            }
-        }
-
-        function makeResizable(element, handle) {
-            let isResizing = false;
-            let startX, startY, startWidth, startHeight;
-
-            handle.addEventListener('mousedown', (e) => {
-                if (element.classList.contains('maximized')) return;
-                isResizing = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                startWidth = parseInt(document.defaultView.getComputedStyle(element).width, 10);
-                startHeight = parseInt(document.defaultView.getComputedStyle(element).height, 10);
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);
-                e.preventDefault();
-            });
-
-            function onMouseMove(e) {
-                if (!isResizing) return;
-                let newWidth = startWidth + e.clientX - startX;
-                let newHeight = startHeight + e.clientY - startY;
-
-                // Set minimum size
-                newWidth = Math.max(300, newWidth);
-                newHeight = Math.max(200, newHeight);
-
-                // Prevent window from exceeding viewport
-                newWidth = Math.min(newWidth, window.innerWidth - element.offsetLeft);
-                newHeight = Math.min(newHeight, window.innerHeight - element.offsetTop);
-
-                element.style.width = newWidth + 'px';
-                element.style.height = newHeight + 'px';
-            }
-
-            function onMouseUp() {
-                isResizing = false;
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', onMouseUp);
-            }
-        }
+        // Optional: Add functionality to add/remove rows dynamically
+        // This can be implemented based on further requirements
 
     </script>
 </body>
